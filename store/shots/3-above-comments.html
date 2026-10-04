@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <header class="caption">
+      <img src="../../static/icons/icon128.png" alt="" />
+      <div>
+        <h1><b>コメントの上</b>：概要欄の下にチャットを広々と配置</h1>
+        <p>右の列は関連動画だけになり、動画を大きく表示できます</p>
+      </div>
+    </header>
+    <div class="page">
+      <div class="masthead"><div class="burger"></div><div class="logo"></div><div class="search">検索</div><div class="me"></div></div>
+      <div class="scroll" style="top: -290px; display: flex; gap: 24px; padding: 12px 24px 0">
+        <div style="flex: 1">
+          <div class="video" style="width: 100%; height: 470px">
+            <div class="bar"></div>
+            <div class="controls"><i></i><i></i><span class="live">ライブ</span><span class="sp"></span><i></i><i></i><i></i></div>
+          </div>
+          <div class="title">【サンプル】ダミー配信のタイトル</div>
+          <div class="owner">
+            <div class="av"></div>
+            <div><div class="name">サンプルチャンネル</div><div class="subs">チャンネル登録者数 1.2万人</div></div>
+            <div class="pill white">登録</div><div class="sp"></div><div class="pill">高く評価</div><div class="pill">共有</div>
+          </div>
+          <div class="desc"><b>1,234 回視聴・2026/10/04 にライブ配信</b>ここには配信の概要欄が表示されます。これはダミーのテキストです。</div>
+          <div id="target" class="chat" style="height: 300px; margin-top: 16px">
+            <div class="chat-header"><span>チャットのリプレイ ▾</span><span>⋮</span></div>
+            <div class="chat-items" data-chat="7"></div>
+          </div>
+          <div class="comments"><h3>コメント 120 件</h3><div data-comments="2"></div></div>
+        </div>
+        <div style="width: 400px" data-related="8"></div>
+      </div>
+      <div class="focus" data-for="#target"><span>チャット</span></div>
+    </div>
+    <script src="mock.js"></script>
+  </body>
+</html>

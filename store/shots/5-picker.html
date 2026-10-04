@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="common.css" />
+    <style>
+      /* 要素ピッカーの見た目（src/content/picker-style.ts と同じ配色） */
+      .pick-box {
+        position: absolute;
+        z-index: 6;
+        background: rgba(62, 166, 255, 0.18);
+        outline: 2px solid #3ea6ff;
+      }
+      .panel {
+        position: absolute;
+        z-index: 7;
+        left: 24px;
+        bottom: 24px;
+        width: 470px;
+        padding: 12px 14px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #f1f1f1;
+        background: rgba(33, 33, 33, 0.97);
+        border: 1px solid #3a3a3a;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+      .panel .t {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .panel .h {
+        margin: 4px 0 8px;
+        color: #aaa;
+      }
+      .panel ol {
+        margin: 0 0 8px;
+        padding: 0;
+        list-style: none;
+      }
+      .panel li {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+      .panel li.sel {
+        background: #263850;
+      }
+      .panel code {
+        font: 12px/1.6 Consolas, monospace;
+      }
+      .good {
+        color: #6fcf97;
+      }
+      .warn {
+        color: #ffd166;
+      }
+      .edit {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .edit div {
+        flex: 1;
+        padding: 5px 8px;
+        font: 12px Consolas, monospace;
+        background: #121212;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+      }
+      .btns {
+        display: flex;
+        gap: 6px;
+      }
+      .btns span {
+        padding: 5px 10px;
+        background: #303030;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+      }
+      .btns .sp {
+        flex: 1;
+        padding: 0;
+        background: none;
+        border: none;
+      }
+      .btns .ok {
+        color: #0f0f0f;
+        font-weight: 600;
+        background: #3ea6ff;
+        border-color: #3ea6ff;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="caption">
+      <img src="../../static/icons/icon128.png" alt="" />
+      <div>
+        <h1><b>要素ピッカー</b>：サイトの変更にも自分で追従</h1>
+        <p>レイアウトが崩れたら、ページ上の要素をクリックしてセレクタを選び直せます。カスタム CSS も追加可能</p>
+      </div>
+    </header>
+    <div class="page">
+      <div class="masthead"><div class="burger"></div><div class="logo"></div><div class="search">検索</div><div class="me"></div></div>
+      <div class="scroll" style="display: flex; gap: 24px; padding: 12px 24px 0">
+        <div style="flex: 1">
+          <div class="video" style="width: 100%; height: 470px">
+            <div class="bar"></div>
+            <div class="controls"><i></i><i></i><span class="live">ライブ</span><span class="sp"></span><i></i><i></i><i></i></div>
+          </div>
+          <div class="title">【サンプル】ダミー配信のタイトル</div>
+          <div class="owner">
+            <div class="av"></div>
+            <div><div class="name">サンプルチャンネル</div><div class="subs">チャンネル登録者数 1.2万人</div></div>
+          </div>
+        </div>
+        <div style="width: 400px">
+          <div class="chat" style="height: 250px; margin-bottom: 12px">
+            <div class="chat-header"><span>上位のチャット ▾</span><span>⋮</span></div>
+            <div class="chat-items" data-chat="7"></div>
+          </div>
+          <div id="target" data-related="4"></div>
+        </div>
+      </div>
+      <div class="pick-box" data-for="#target"></div>
+      <div class="panel">
+        <div class="t">「関連動画」を選択</div>
+        <div class="h">候補から選ぶか、セレクタを直接編集してください。</div>
+        <ol>
+          <li class="sel"><code>ytd-watch-flexy #secondary-inner &gt; #related</code><span class="good">1件</span></li>
+          <li><code>div#secondary-inner &gt; div#related</code><span class="good">1件</span></li>
+          <li><code>ytd-watch-flexy div#related</code><span class="warn">2件</span></li>
+          <li><code>div#related</code><span class="warn">2件</span></li>
+        </ol>
+        <div class="edit"><div>ytd-watch-flexy #secondary-inner &gt; #related</div><span class="good">1件に一致</span></div>
+        <div class="btns"><span>親要素へ</span><span>選び直す</span><span class="sp"></span><span>キャンセル</span><span class="ok">決定</span></div>
+      </div>
+    </div>
+    <script src="mock.js"></script>
+    <script>
+      // ピッカーの青枠を対象に合わせる（余白なし）
+      const box = document.querySelector('.pick-box');
+      const r = document.querySelector(box.dataset.for).getBoundingClientRect();
+      const p = box.offsetParent.getBoundingClientRect();
+      Object.assign(box.style, { left: `${r.left - p.left}px`, top: `${r.top - p.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+    </script>
+  </body>
+</html>

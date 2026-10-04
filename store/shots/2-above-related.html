@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <header class="caption">
+      <img src="../../static/icons/icon128.png" alt="" />
+      <div>
+        <h1><b>関連動画の上</b>：シアターモードでも動画は画面幅いっぱい</h1>
+        <p>チャットを右の列の先頭に配置。高さはポップアップで調整できます</p>
+      </div>
+    </header>
+    <div class="page">
+      <div class="masthead"><div class="burger"></div><div class="logo"></div><div class="search">検索</div><div class="me"></div></div>
+      <div class="scroll" style="top: -160px">
+        <div class="video full" style="width: 1280px; height: 470px">
+          <div class="bar"></div>
+          <div class="controls"><i></i><i></i><span class="live">ライブ</span><span class="sp"></span><i></i><i></i><i></i></div>
+        </div>
+        <div style="display: flex; gap: 24px; padding: 0 24px">
+          <div style="flex: 1">
+            <div class="title">【サンプル】ダミー配信のタイトル</div>
+            <div class="owner">
+              <div class="av"></div>
+              <div><div class="name">サンプルチャンネル</div><div class="subs">チャンネル登録者数 1.2万人</div></div>
+              <div class="pill white">登録</div><div class="sp"></div><div class="pill">高く評価</div><div class="pill">共有</div>
+            </div>
+            <div class="desc"><b>320 人が視聴中・配信開始日: 2026/10/04</b>ここには配信の概要欄が表示されます。これはダミーのテキストです。</div>
+          </div>
+          <div style="width: 420px; padding-top: 12px">
+            <div id="target" class="chat" style="height: 360px; margin-bottom: 12px">
+              <div class="chat-header"><span>上位のチャット ▾</span><span>⋮</span></div>
+              <div class="chat-items" data-chat="7"></div>
+              <div class="chat-input"><div class="av"></div><div class="box">チャット...</div></div>
+            </div>
+            <div data-related="3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="focus" data-for="#target"><span>チャット</span></div>
+    </div>
+    <script src="mock.js"></script>
+  </body>
+</html>

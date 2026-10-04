@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "YT Custom Layouts",
   "version": "0.3.0",
-  "description": "YouTube の生配信・アーカイブでチャットの位置やレイアウトを自由に変更します。",
+  "description": "YouTube のライブ配信・アーカイブで、チャット欄を関連動画の上・コメントの上・動画の上などに配置。動画を大きく、見やすいレイアウトに。",
   "minimum_chrome_version": "125",
   "icons": {
     "16": "icons/icon16.png",

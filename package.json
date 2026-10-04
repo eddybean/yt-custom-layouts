@@ -8,7 +8,8 @@
     "build": "node build.mjs",
     "watch": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
-    "version": "node scripts/sync-version.mjs && git add static/manifest.json"
+    "version": "node scripts/sync-version.mjs && git add static/manifest.json",
+    "shots": "npm run build && node store/build-shots.mjs"
   },
   "devDependencies": {
     "@types/chrome": "^0.3.4",
