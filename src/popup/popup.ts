@@ -89,6 +89,7 @@ hideHeader.addEventListener('change', () => void saveSettings({ hideChatHeader: 
 hideInput.addEventListener('change', () => void saveSettings({ hideChatInput: hideInput.checked }));
 hideTicker.addEventListener('change', () => void saveSettings({ hideTicker: hideTicker.checked }));
 
+$('openOptions').addEventListener('click', () => void chrome.runtime.openOptionsPage());
 $('resetOverlay').addEventListener('click', () => void saveSettings({ overlay: DEFAULT_OVERLAY }));
 $('toggleChat').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

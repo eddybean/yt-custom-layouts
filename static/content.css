@@ -1,37 +1,42 @@
 /*
- * 視聴ページ側のレイアウト上書き。すべて <html> の ytcl-* class 配下でのみ効く。
+ * 視聴ページ側のレイアウト上書き。
  *
- * YouTube の仕組み（2026-10 時点の調査結果）:
- *  - チャット幅は ytd-watch-flexy の --ytd-watch-flexy-sidebar-width で決まる。
+ * YouTube の要素は直接指定せず、src/content/main.ts が付ける次の目印だけを対象にする:
+ *   [data-ytcl-<役割>]   : 役割の要素（セレクタは src/shared/selectors.ts の ROLES。設定画面で上書き可）
+ *   html.ytcl-s-<状態>    : 視聴ページの状態（STATE_ATTRS を転記）
+ *   html.ytcl-preset-<id> : 適用中のプリセット
+ *
+ * ただし YouTube 内部の CSS 変数・プロパティには依存している（2026-10 時点の調査結果）:
+ *  - チャット幅は --ytd-watch-flexy-sidebar-width で決まる。
  *    YouTube が resize のたびにインラインで書き戻すので !important で上書きする。
- *  - シアター時は [fixed-panels][squeezeback] が付き、#chat が position:fixed で右端に固定される。
- *  - 全画面時は [fullscreen][squeezeback] が付き、#chat は #panels-full-bleed-container 内へ移動する。
- *    このコンテナには transform が掛かっており fixed の基準になってしまうので打ち消す。
+ *  - シアター時はチャットが position:fixed で右端に固定され、transition: top 0.3s が付く。
+ *  - シアター・全画面時のチャット領域 (panels-full-bleed) には transform が掛かり、fixed の基準になってしまう。
+ *  - 通常レイアウト時のチャットには min-height: 596px が付く。
  */
 
-/* ---------- チャット幅（標準 / チャット左） ---------- */
-html.ytcl-chat-width ytd-watch-flexy {
+/* ---------- チャット幅（標準 / チャット左 / 関連動画の上） ---------- */
+html.ytcl-chat-width [data-ytcl-watch] {
   --ytd-watch-flexy-sidebar-width: var(--ytcl-chat-width) !important;
 }
 
 /* ---------- チャット左 (swap) ---------- */
 /* 通常の2カラム */
-html.ytcl-preset-swap ytd-watch-flexy:not([fixed-panels]):not([squeezeback]) #columns {
+html.ytcl-preset-swap:not(.ytcl-s-fixed-panels):not(.ytcl-s-squeezeback) [data-ytcl-columns] {
   flex-direction: row-reverse !important;
 }
-html.ytcl-preset-swap ytd-watch-flexy:not([fixed-panels]):not([squeezeback]) #secondary {
+html.ytcl-preset-swap:not(.ytcl-s-fixed-panels):not(.ytcl-s-squeezeback) [data-ytcl-secondary] {
   padding-right: 0 !important;
   padding-left: var(--ytd-watch-flexy-horizontal-page-margin, 16px) !important;
 }
-/* シアター・全画面（プレイヤーとチャットパネルの並び） */
-html.ytcl-preset-swap ytd-watch-flexy[squeezeback] #full-bleed-container {
+/* シアター・全画面（プレイヤーとチャット領域の並び） */
+html.ytcl-preset-swap.ytcl-s-squeezeback [data-ytcl-full-bleed] {
   flex-direction: row-reverse !important;
 }
-html.ytcl-preset-swap ytd-watch-flexy[fixed-panels] #chat {
+html.ytcl-preset-swap.ytcl-s-fixed-panels [data-ytcl-chat] {
   left: 0 !important;
   right: auto !important;
 }
-html.ytcl-preset-swap ytd-watch-flexy[fixed-panels] #columns {
+html.ytcl-preset-swap.ytcl-s-fixed-panels [data-ytcl-columns] {
   padding-right: 0 !important;
   padding-left: var(--ytd-watch-flexy-sidebar-width) !important;
 }
@@ -40,25 +45,24 @@ html.ytcl-preset-swap ytd-watch-flexy[fixed-panels] #columns {
 /*
  * JS (src/content/slot.ts) が #ytcl-chat-slot を目的の位置に差し込み、置けたら ytcl-slot-ready を付ける。
  * チャット本体は DOM を動かさず、CSS Anchor Positioning で枠に重ねる。
- * 全画面時は下段 (#columns) が非表示になるため、YouTube 既定の横並びのままにする。
  */
 #ytcl-chat-slot {
   display: none;
 }
-html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy:not([fullscreen]) #ytcl-chat-slot {
+html.ytcl-slot-ready.ytcl-s-chat-open:not(.ytcl-s-fullscreen) #ytcl-chat-slot {
   display: block;
   anchor-name: --ytcl-chat-slot;
   height: var(--ytcl-chat-height);
   margin: 12px 0;
 }
-html.ytcl-preset-above-related.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy:not([fullscreen]) #ytcl-chat-slot {
+html.ytcl-preset-above-related.ytcl-slot-ready.ytcl-s-chat-open:not(.ytcl-s-fullscreen) #ytcl-chat-slot {
   margin: 0 0 12px;
 }
-/* #secondary が position:relative だと別カラムの枠を anchor にできないため static にする */
-html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy:not([fullscreen]) #secondary {
+/* 右の列が position:relative だと別の列にある枠を anchor にできないため static にする */
+html.ytcl-slot-ready.ytcl-s-chat-open:not(.ytcl-s-fullscreen) [data-ytcl-secondary] {
   position: static !important;
 }
-html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy:not([fullscreen]) ytd-live-chat-frame#chat:not([collapsed]) {
+html.ytcl-slot-ready.ytcl-s-chat-open:not(.ytcl-s-fullscreen) [data-ytcl-chat] {
   position: absolute !important;
   position-anchor: --ytcl-chat-slot;
   top: anchor(top) !important;
@@ -72,31 +76,51 @@ html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy:not([fullscreen]) ytd-live-c
   margin: 0 !important;
   transition: none !important;
 }
-/* シアター時: 右端の固定チャット分の領域を詰めてプレイヤーを全幅にする */
-html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy[fixed-panels] #columns {
+/* シアター・全画面: プレイヤー横のチャット領域を詰めてプレイヤーを全幅にする */
+html.ytcl-slot-ready.ytcl-s-chat-open.ytcl-s-fixed-panels [data-ytcl-columns] {
   padding-right: 0 !important;
 }
-html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy[squeezeback]:not([fullscreen]) #panels-full-bleed-container {
+html.ytcl-slot-ready.ytcl-s-chat-open.ytcl-s-squeezeback [data-ytcl-panels-full-bleed] {
   width: 0 !important;
   transform: none !important;
   animation: none !important;
+}
+/*
+ * 全画面: 下段（概要欄・関連動画）が非表示になり置き場所がないため、チャットは見えなくする。
+ * ただしチャットを閉じたり画面外に出したりはしない（他の拡張がチャットを読み取れるよう、
+ * 画面内で動かしたまま透明にしてクリックも透過させる）。
+ */
+html.ytcl-slot-ready.ytcl-s-chat-open.ytcl-s-fullscreen [data-ytcl-chat] {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 400px !important;
+  height: 100vh !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
 }
 
 /* ---------- オーバーレイ ---------- */
 /* チャット分の領域を詰めてプレイヤーを広げる */
-html.ytcl-preset-overlay.ytcl-chat-open ytd-watch-flexy {
+html.ytcl-preset-overlay.ytcl-s-chat-open [data-ytcl-watch] {
   --ytd-watch-flexy-sidebar-width: 0px !important;
 }
-html.ytcl-preset-overlay ytd-watch-flexy[squeezeback] #panels-full-bleed-container {
+html.ytcl-preset-overlay.ytcl-s-squeezeback [data-ytcl-panels-full-bleed] {
   transform: none !important;
   animation: none !important;
   width: 0 !important;
 }
-html.ytcl-preset-overlay ytd-watch-flexy[fixed-panels] #columns {
+html.ytcl-preset-overlay.ytcl-s-fixed-panels [data-ytcl-columns] {
   padding-right: 0 !important;
 }
 /* チャット本体をビューポート基準で浮かべる */
-html.ytcl-preset-overlay ytd-live-chat-frame#chat:not([collapsed]) {
+html.ytcl-preset-overlay.ytcl-s-chat-open [data-ytcl-chat] {
   position: fixed !important;
   left: var(--ytcl-ov-x) !important;
   top: var(--ytcl-ov-y) !important;
@@ -104,7 +128,6 @@ html.ytcl-preset-overlay ytd-live-chat-frame#chat:not([collapsed]) {
   height: var(--ytcl-ov-h) !important;
   right: auto !important;
   bottom: auto !important;
-  /* 通常レイアウト時の YouTube 既定 min-height (596px) を打ち消す */
   min-height: 0 !important;
   max-height: none !important;
   margin: 0 !important;
@@ -112,10 +135,9 @@ html.ytcl-preset-overlay ytd-live-chat-frame#chat:not([collapsed]) {
   border-radius: 8px;
   background: transparent !important;
   border: none !important;
-  /* シアター時の YouTube 既定 transition (top 0.3s) で移動バーとずれるのを防ぐ */
   transition: none !important;
 }
-html.ytcl-preset-overlay ytd-live-chat-frame#chat:not([collapsed]) #show-hide-button {
+html.ytcl-preset-overlay.ytcl-s-chat-open [data-ytcl-chat-toggle] {
   display: none !important;
 }
 
@@ -123,7 +145,7 @@ html.ytcl-preset-overlay ytd-live-chat-frame#chat:not([collapsed]) #show-hide-bu
 #ytcl-overlay-frame {
   display: none;
 }
-html.ytcl-preset-overlay.ytcl-chat-open #ytcl-overlay-frame {
+html.ytcl-preset-overlay.ytcl-s-chat-open #ytcl-overlay-frame {
   display: block;
   position: fixed;
   left: var(--ytcl-ov-x);
@@ -158,7 +180,7 @@ html.ytcl-dragging .ytcl-overlay-bar {
   background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.5) 50%);
   border-radius: 0 0 8px 0;
 }
-html.ytcl-dragging ytd-live-chat-frame#chat {
+html.ytcl-dragging [data-ytcl-chat] {
   pointer-events: none !important;
 }
 html.ytcl-dragging {

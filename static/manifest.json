@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YT Custom Layouts",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "YouTube の生配信・アーカイブでチャットの位置やレイアウトを自由に変更します。",
   "minimum_chrome_version": "125",
   "icons": {
@@ -13,6 +13,9 @@
   "permissions": [
     "storage"
   ],
+  "host_permissions": [
+    "https://www.youtube.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
@@ -23,6 +26,10 @@
       "16": "icons/icon16.png",
       "32": "icons/icon32.png"
     }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   },
   "commands": {
     "cycle-preset": {

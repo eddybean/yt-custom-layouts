@@ -2,7 +2,7 @@
 
 YouTube の生配信・アーカイブ視聴ページで、ライブチャットの位置やサイズを自由に変え、動画の表示領域を広げる Chrome 拡張 (Manifest V3)。
 
-- 最終更新: 2026-10-04（v0.2.0）
+- 最終更新: 2026-10-04（v0.3.0）
 - 対象: `https://www.youtube.com/watch?v=*` のうちライブチャット / チャットリプレイがあるページ
 
 ---
@@ -53,8 +53,8 @@ iframe は youtube.com と同一オリジンなので、拡張から中に介入
 ## 2. 基本方針
 
 1. **DOM は動かさない。** YouTube 自身がチャットを移動させるため、拡張が DOM を動かすと衝突する。レイアウトは CSS の上書きと `position: fixed` だけで実現する。
-2. **状態の判定は `ytd-watch-flexy` の属性に任せる。** CSS は属性セレクタで直接書き、JS は「チャットが開いているか」だけを `<html>` に写す。
-3. **YouTube 依存部分を集約する。** セレクタ・属性名は `src/shared/selectors.ts`、上書き CSS は `static/content.css` に集約する。
+2. **CSS は YouTube のセレクタを直接書かない。** JS が役割ごとのセレクタで要素を探して目印の属性 `data-ytcl-<役割>` を付け、視聴ページの状態属性を `<html>` の `ytcl-s-<状態>` class に写す。CSS はこの目印と class だけを対象にする。
+3. **YouTube 依存部分を集約し、ユーザーが直せるようにする。** 役割の既定セレクタと状態属性名は `src/shared/selectors.ts` に集約する。セレクタは設定画面（要素ピッカー付き）で上書きでき、YouTube 内部の CSS 変数などへの依存はカスタム CSS で補えるようにする（3.7、3.8）。
 4. **レイアウトを変えたら `resize` イベントを発火する。** プレイヤーに動画サイズを再計算させる。
 5. **設定は 1 つだけ。** チャンネルや表示モード（通常 / シアター）ごとに設定を分けず、どこでも同じレイアウトになるようにする。
 
@@ -68,13 +68,13 @@ iframe は youtube.com と同一オリジンなので、拡張から中に介入
 |---|---|---|---|
 | `default` | 標準 | YouTube のまま | YouTube のまま |
 | `swap` | チャット左 | `#columns` の並びを逆にする | プレイヤーとチャットの左右を入れ替える |
-| `above-comments` | コメントの上 | 概要欄の下・コメント欄の上にチャットを置く | 同左。右端の固定チャットをやめ、プレイヤーを全幅にする |
-| `above-related` | 関連動画の上 | 関連動画の列の先頭にチャットを置く（高さを指定可） | 同左。右端の固定チャットをやめ、プレイヤーを全幅にする |
+| `above-comments` | コメントの上 | 概要欄の下・コメント欄の上にチャットを置く | シアター: 同左。右端の固定チャットをやめ、プレイヤーを全幅にする。全画面: チャットを見えなくし、プレイヤーを全幅にする |
+| `above-related` | 関連動画の上 | 関連動画の列の先頭にチャットを置く（高さを指定可） | 同上 |
 | `overlay` | オーバーレイ | チャットを浮かべ、右カラムは関連動画のみ | チャットを動画の上に浮かべ、プレイヤーを全幅に戻す |
 
 - 「チャット非表示」はプリセットではなく、YouTube 標準の開閉ボタンを使う（iframe が空になり、負荷も止まるため）。ショートカットキーとポップアップから操作する。
 - チャットが閉じているときは、オーバーレイや差し込み枠のスタイルを適用しない。
-- 全画面時は下段（概要欄・コメント・関連動画）が非表示になるため、「コメントの上」「関連動画の上」は YouTube 既定の横並び表示になる。
+- 全画面時は下段（概要欄・コメント・関連動画）が非表示になり置き場所がないため、「コメントの上」「関連動画の上」ではチャットを見えなくする。ただし**チャットは閉じない**。ニコニコ風表示など、チャット欄を読み取る他の拡張と併用できるよう、画面内に置いたまま `opacity: 0`・`pointer-events: none` にする（画面外への移動や `display: none` は、描画の間引きやチャットの更新停止を招くおそれがあるため避ける）。
 
 ### 3.2 コメントの上 / 関連動画の上
 
@@ -117,7 +117,30 @@ iframe は youtube.com と同一オリジンなので、拡張から中に介入
 
 ### 3.6 設定の保存
 
-`chrome.storage.sync` のキー `settings` に 1 オブジェクトとして保存する（型は `src/shared/settings.ts` の `Settings`）。ポップアップ・視聴ページ・チャット iframe は `storage.onChanged` で同期する。
+`chrome.storage.sync` のキー `settings` に 1 オブジェクトとして保存する（型は `src/shared/settings.ts` の `Settings`。セレクタの上書きも含む）。カスタム CSS は `storage.sync` の 1 項目 8KB 制限を避けるため `chrome.storage.local` のキー `customCss` に保存する（他の PC とは同期されない）。ポップアップ・設定画面・視聴ページ・チャット iframe は `storage.onChanged` で同期する。
+
+### 3.7 セレクタの上書きと要素ピッカー
+
+YouTube の DOM 変更でセレクタが合わなくなったときに、ユーザーが自分で直せるようにする。
+
+- 役割（`src/shared/selectors.ts` の `ROLES`）ごとに既定セレクタを持ち、設定画面（オプションページ）で上書きできる。空欄・既定と同じ値は「上書きなし」として扱う。
+  - 視聴ページ: 視聴ページ / 下段の列 / 右の列 / シアター時の上段 / シアター時のチャット領域 / チャット / チャット開閉ボタン / 概要欄 / 関連動画
+  - チャット欄（iframe 内）: チャット本体 / ヘッダー / メッセージ一覧 / 入力欄 / ティッカー
+- 設定画面は、最後に使った YouTube 視聴ページのタブにメッセージを送り、各セレクタの**一致数**を表示する。1 要素だけに一致すべき役割で複数に一致したら注意表示にする。
+- 「ページから選ぶ」で、そのタブ上で**要素ピッカー**を起動する（uBlock Origin の要素ピッカーと同様）。
+  - マウスを乗せた要素をハイライトし、クリックで選ぶ。クリックなどは YouTube に渡さない。
+  - 選んだ要素から、セレクタの候補を一致数付きで並べる（現在値・既定値、`#id`、カスタム要素名・id を持つ祖先からのパス、class など）。
+  - 「親要素へ」で選択をさかのぼれる。セレクタは直接編集でき、一致する要素をハイライトする。
+  - チャット欄の役割はチャット iframe の中から選ぶ（同一オリジンなのでトップフレームから直接扱う）。
+  - UI は Shadow DOM に閉じ込め、パネルでのキー入力を YouTube のショートカットに渡さない。Esc でキャンセル。
+  - 決定すると設定に保存し、設定画面に戻る。
+- セレクタが不正、または一致しない場合は、その役割を使う機能だけが働かない（YouTube 標準の表示のまま）。
+
+### 3.8 カスタム CSS
+
+- 設定画面で「視聴ページ用」「チャット欄用」の CSS を入力できる。拡張が有効のときだけ `<style id="ytcl-custom-css">` として差し込む。
+- 目印の属性（`[data-ytcl-chat]` など）や `<html>` の class（`.ytcl-s-theater` など）も使える。
+- YouTube 内部の CSS 変数・プロパティが変わったときの応急処置に使う。
 
 ---
 
@@ -126,29 +149,36 @@ iframe は youtube.com と同一オリジンなので、拡張から中に介入
 ```
 static/manifest.json
 ├─ content.js + content.css   … youtube.com 全体（live_chat 系を除く）。document_start
-│    src/content/main.ts      … 設定の反映、ytd-watch-flexy の監視、resize の発火
+│    src/content/main.ts      … 設定の反映、目印付け、状態の転記、resize の発火
 │    src/content/overlay.ts   … 移動バー・リサイズグリップ
 │    src/content/slot.ts      … コメント/関連動画の上に置く差し込み枠
+│    src/content/picker.ts    … 要素ピッカー（candidates.ts: セレクタ候補の生成）
 ├─ chat.js + chat.css         … /live_chat, /live_chat_replay（all_frames）
-│    src/chat/main.ts         … iframe 内の見た目調整
+│    src/chat/main.ts         … iframe 内の目印付けと見た目調整
 ├─ background.js              … ショートカットキーの処理
 │    src/background.ts
-└─ popup.html + popup.js      … 設定 UI
-     src/popup/popup.ts
+├─ popup.html + popup.js      … 設定 UI
+│    src/popup/popup.ts
+└─ options.html + options.js  … 詳細設定（セレクタ・カスタム CSS）
+     src/options/options.ts
 src/shared/
-├─ settings.ts                … 設定の型・既定値・読み書き
-├─ selectors.ts               … YouTube 依存のセレクタ・属性名
-└─ messages.ts                … タブへ送るメッセージ型
+├─ settings.ts                … 設定・カスタム CSS の型・既定値・読み書き
+├─ selectors.ts               … 役割と既定セレクタ、状態属性名（YouTube 依存）
+├─ marker.ts                  … 役割の要素探索と目印付け、DOM 監視
+├─ custom-css.ts              … カスタム CSS の差し込み
+└─ messages.ts                … タブ・設定画面間のメッセージ型
 ```
 
 - ビルド: esbuild で各エントリを IIFE に束ね、`static/` と一緒に `dist/` へ出力する。
-- SPA 遷移: `yt-navigate-finish` で `ytd-watch-flexy` を取り直し、MutationObserver（`attributeFilter` 指定）を付け直す。
+- 目印付け: DOM の追加・削除を MutationObserver で監視し、間引いて（視聴ページ 150ms、チャット iframe 500ms）役割の要素を探し直す。SPA 遷移や YouTube の再描画で要素が入れ替わっても追従する。目印は属性の変更なので監視に反応せず、ループしない。
+- 状態: 「視聴ページ」役割の要素の状態属性（`STATE_ATTRS`）を `attributeFilter` 付きの MutationObserver で監視し、`<html>` に写す。
 - `<html>` に付ける class:
   - `ytcl-preset-<id>`（`default` 以外）
+  - `ytcl-s-chat-open` / `ytcl-s-theater` / `ytcl-s-fullscreen` / `ytcl-s-fixed-panels` / `ytcl-s-squeezeback`
   - `ytcl-slot-ready`
   - `ytcl-chat-width`
-  - `ytcl-chat-open`
   - `ytcl-dragging`
+- 権限: `storage`、`host_permissions: https://www.youtube.com/*`（設定画面から YouTube タブを探して一致数を問い合わせるため）。
 - CSS 変数: `--ytcl-chat-width`, `--ytcl-chat-height`, `--ytcl-ov-x/y/w/h`（視聴ページ）、`--ytcl-bg-alpha`, `--ytcl-font-scale`（チャット iframe）
 
 ---
@@ -168,8 +198,9 @@ src/shared/
 
 | 内容 | 対策 |
 |---|---|
-| YouTube の DOM・CSS 変更で効かなくなる | 依存部分を `selectors.ts` と `content.css` に集約する。要素が見つからなければ何もしない（標準レイアウトのまま） |
-| 全画面時の左右入れ替えは実機で未検証 | シアター時と同じ `#full-bleed-container` の並び替えで効く想定。実機で確認する |
+| YouTube の DOM 変更で効かなくなる | セレクタを設定画面・要素ピッカーで直せる。要素が見つからなければ何もしない（標準レイアウトのまま） |
+| YouTube 内部の CSS 変数・状態属性の変更 | 状態属性は `selectors.ts` の修正が必要。CSS 変数などはカスタム CSS で応急処置できる |
+| 全画面時の「コメントの上」「関連動画の上」は実機で要確認 | シアター時と同じ仕組み（チャット領域の幅 0）でプレイヤーを全幅にし、チャットは透明化する |
 | ニコニコ風コメント表示などの他の拡張との CSS 競合 | class・ID・CSS 変数に `ytcl-` 接頭辞を付ける |
 | 右下のリサイズグリップがチャット入力欄の送信ボタンと重なることがある | 必要ならグリップを枠の外に出す |
 | `zoom` による文字拡大でスクロール位置がずれる可能性 | 問題があればフォントサイズ用の CSS 変数で対応する方式に切り替える |

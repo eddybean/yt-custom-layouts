@@ -1,3 +1,5 @@
+import type { RoleId } from './selectors';
+
 export type PresetId = 'default' | 'swap' | 'above-comments' | 'above-related' | 'overlay';
 
 export interface PresetInfo {
@@ -25,6 +27,9 @@ export interface OverlayRect {
   h: number;
 }
 
+/** 役割ごとのセレクタの上書き。未指定の役割は既定セレクタを使う */
+export type SelectorOverrides = Partial<Record<RoleId, string>>;
+
 export interface Settings {
   enabled: boolean;
   preset: PresetId;
@@ -40,6 +45,7 @@ export interface Settings {
   hideChatHeader: boolean;
   hideChatInput: boolean;
   hideTicker: boolean;
+  selectors: SelectorOverrides;
 }
 
 export const DEFAULT_OVERLAY: OverlayRect = { x: 72, y: 10, w: 26, h: 70 };
@@ -55,6 +61,7 @@ export const DEFAULT_SETTINGS: Settings = {
   hideChatHeader: false,
   hideChatInput: false,
   hideTicker: false,
+  selectors: {},
 };
 
 const STORAGE_KEY = 'settings';
@@ -65,6 +72,7 @@ function normalize(value: unknown): Settings {
     ...DEFAULT_SETTINGS,
     ...v,
     overlay: { ...DEFAULT_OVERLAY, ...(v.overlay ?? {}) },
+    selectors: { ...(v.selectors ?? {}) },
   };
 }
 
@@ -83,6 +91,45 @@ export function onSettingsChanged(callback: (settings: Settings) => void): void 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync' && changes[STORAGE_KEY]) {
       callback(normalize(changes[STORAGE_KEY].newValue));
+    }
+  });
+}
+
+/** 役割のセレクタを保存する。空文字なら上書きを消して既定に戻す */
+export async function saveSelector(role: RoleId, selector: string): Promise<void> {
+  const selectors = { ...(await loadSettings()).selectors };
+  if (selector.trim()) selectors[role] = selector.trim();
+  else delete selectors[role];
+  await saveSettings({ selectors });
+}
+
+/*
+ * カスタム CSS。storage.sync は 1 項目 8KB までなので、容量に余裕のある storage.local に保存する
+ * （そのため他の PC とは同期されない）。
+ */
+export interface CustomCss {
+  /** 視聴ページに適用する CSS */
+  page: string;
+  /** チャット iframe 内に適用する CSS */
+  chat: string;
+}
+
+export const DEFAULT_CUSTOM_CSS: CustomCss = { page: '', chat: '' };
+const CUSTOM_CSS_KEY = 'customCss';
+
+export async function loadCustomCss(): Promise<CustomCss> {
+  const result = await chrome.storage.local.get(CUSTOM_CSS_KEY);
+  return { ...DEFAULT_CUSTOM_CSS, ...(result[CUSTOM_CSS_KEY] ?? {}) };
+}
+
+export async function saveCustomCss(css: CustomCss): Promise<void> {
+  await chrome.storage.local.set({ [CUSTOM_CSS_KEY]: css });
+}
+
+export function onCustomCssChanged(callback: (css: CustomCss) => void): void {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes[CUSTOM_CSS_KEY]) {
+      callback({ ...DEFAULT_CUSTOM_CSS, ...(changes[CUSTOM_CSS_KEY].newValue ?? {}) });
     }
   });
 }

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YT Custom Layouts 詳細設定</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>YT Custom Layouts 詳細設定</h1>
+
+      <section>
+        <h2>セレクタ</h2>
+        <p class="note">
+          YouTube の変更でレイアウトが効かなくなったときに、各役割の要素を指すセレクタを変更できます。
+          空欄なら既定のセレクタを使います。「ページから選ぶ」で、YouTube のタブ上で要素をクリックして選べます。
+        </p>
+        <div class="target">
+          <span id="targetTab"></span>
+          <button type="button" id="recount">一致数を再確認</button>
+        </div>
+        <div id="roles"></div>
+        <div class="actions">
+          <button type="button" id="resetAll">すべて既定に戻す</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>カスタム CSS</h2>
+        <p class="note">
+          拡張の設定が「有効」のときに追加で適用する CSS です。YouTube 側の変更で見た目が崩れたときの応急処置などに使えます。
+          YouTube のスタイルを上書きするには <code>!important</code> が必要な場合があります。この設定は他の PC とは同期されません。
+        </p>
+        <label class="css">
+          <span>視聴ページ</span>
+          <textarea id="cssPage" spellcheck="false" rows="10"></textarea>
+        </label>
+        <label class="css">
+          <span>チャット欄（iframe の中）</span>
+          <textarea id="cssChat" spellcheck="false" rows="8"></textarea>
+        </label>
+        <div class="actions">
+          <span id="cssStatus" class="status"></span>
+          <button type="button" id="saveCss" class="primary">CSS を保存</button>
+        </div>
+      </section>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -10,6 +10,8 @@ YouTube の生配信・アーカイブで、ライブチャットの位置やサ
 
 Chrome 125 以上が必要です（CSS Anchor Positioning を使用）。
 
+YouTube の変更でレイアウトが効かなくなったときは、ポップアップの「詳細設定」から、各要素のセレクタを変更したり（ページ上の要素をクリックして選ぶこともできます）、カスタム CSS を追加したりできます。
+
 仕様と YouTube 側の調査結果は [docs/SPEC.md](docs/SPEC.md) を参照してください。
 
 ## 開発
@@ -34,11 +36,21 @@ npm run typecheck
 | `src/content/` | 視聴ページ用。設定の反映、状態の監視、差し込み枠、オーバーレイの操作 |
 | `src/chat/` | チャット iframe 用。透過・文字サイズ・要素の非表示 |
 | `src/popup/` | ポップアップの設定 UI |
+| `src/options/` | 詳細設定（セレクタの上書き・カスタム CSS） |
 | `src/background.ts` | ショートカットキーの処理 |
 | `src/shared/` | 設定・セレクタ・メッセージ型 |
 | `static/` | manifest・CSS・HTML（ビルド時に `dist/` へコピー） |
 
 YouTube の仕様変更で効かなくなったときは、まず `src/shared/selectors.ts` と `static/content.css` を確認してください。
+
+### リリース
+
+```bash
+npm version patch
+git push --follow-tags
+```
+
+タグを push すると GitHub Actions がビルドし、GitHub Release の作成と Chrome Web Store への公開申請を行います。初回の登録と認証情報の設定は [docs/PUBLISHING.md](docs/PUBLISHING.md) を参照してください。
 
 ## ライセンス
 
