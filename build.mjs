@@ -11,6 +11,7 @@ const options = {
     chat: 'src/chat/main.ts',
     background: 'src/background.ts',
     popup: 'src/popup/popup.ts',
+    options: 'src/options/options.ts',
   },
   outdir: 'dist',
   bundle: true,

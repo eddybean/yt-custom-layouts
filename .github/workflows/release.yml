@@ -1,0 +1,53 @@
+name: Release
+
+# v1.2.3 形式のタグを push すると、ビルドして GitHub Release を作り、
+# Chrome Web Store の認証情報が Secrets に登録されていればストアへアップロード・公開申請する。
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+
+      - name: タグと manifest のバージョンが一致するか確認
+        run: |
+          version="v$(node -p "require('./dist/manifest.json').version")"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::タグ ($GITHUB_REF_NAME) と manifest のバージョン ($version) が一致しません"
+            exit 1
+          fi
+
+      - name: zip を作成
+        run: cd dist && zip -r "../yt-custom-layouts-$GITHUB_REF_NAME.zip" .
+
+      - name: GitHub Release を作成
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "yt-custom-layouts-$GITHUB_REF_NAME.zip" --generate-notes
+
+      - name: Chrome Web Store にアップロードして公開申請
+        env:
+          EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: |
+          if [ -z "$EXTENSION_ID" ] || [ -z "$REFRESH_TOKEN" ]; then
+            echo "Chrome Web Store の Secrets が未登録のため、ストアへのアップロードをスキップします"
+            exit 0
+          fi
+          npx --yes --package chrome-webstore-upload-cli@4 chrome-webstore-upload --source "yt-custom-layouts-$GITHUB_REF_NAME.zip"
