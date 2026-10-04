@@ -36,6 +36,52 @@ html.ytcl-preset-swap ytd-watch-flexy[fixed-panels] #columns {
   padding-left: var(--ytd-watch-flexy-sidebar-width) !important;
 }
 
+/* ---------- コメントの上 / 関連動画の上（差し込み枠） ---------- */
+/*
+ * JS (src/content/slot.ts) が #ytcl-chat-slot を目的の位置に差し込み、置けたら ytcl-slot-ready を付ける。
+ * チャット本体は DOM を動かさず、CSS Anchor Positioning で枠に重ねる。
+ * 全画面時は下段 (#columns) が非表示になるため、YouTube 既定の横並びのままにする。
+ */
+#ytcl-chat-slot {
+  display: none;
+}
+html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy:not([fullscreen]) #ytcl-chat-slot {
+  display: block;
+  anchor-name: --ytcl-chat-slot;
+  height: var(--ytcl-chat-height);
+  margin: 12px 0;
+}
+html.ytcl-preset-above-related.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy:not([fullscreen]) #ytcl-chat-slot {
+  margin: 0 0 12px;
+}
+/* #secondary が position:relative だと別カラムの枠を anchor にできないため static にする */
+html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy:not([fullscreen]) #secondary {
+  position: static !important;
+}
+html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy:not([fullscreen]) ytd-live-chat-frame#chat:not([collapsed]) {
+  position: absolute !important;
+  position-anchor: --ytcl-chat-slot;
+  top: anchor(top) !important;
+  left: anchor(left) !important;
+  width: anchor-size(width) !important;
+  height: anchor-size(height) !important;
+  right: auto !important;
+  bottom: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  transition: none !important;
+}
+/* シアター時: 右端の固定チャット分の領域を詰めてプレイヤーを全幅にする */
+html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy[fixed-panels] #columns {
+  padding-right: 0 !important;
+}
+html.ytcl-slot-ready.ytcl-chat-open ytd-watch-flexy[squeezeback]:not([fullscreen]) #panels-full-bleed-container {
+  width: 0 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
 /* ---------- オーバーレイ ---------- */
 /* チャット分の領域を詰めてプレイヤーを広げる */
 html.ytcl-preset-overlay.ytcl-chat-open ytd-watch-flexy {
@@ -58,6 +104,9 @@ html.ytcl-preset-overlay ytd-live-chat-frame#chat:not([collapsed]) {
   height: var(--ytcl-ov-h) !important;
   right: auto !important;
   bottom: auto !important;
+  /* 通常レイアウト時の YouTube 既定 min-height (596px) を打ち消す */
+  min-height: 0 !important;
+  max-height: none !important;
   margin: 0 !important;
   z-index: 2100 !important;
   border-radius: 8px;

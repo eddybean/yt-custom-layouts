@@ -2,7 +2,7 @@
 
 YouTube の生配信・アーカイブ視聴ページで、ライブチャットの位置やサイズを自由に変え、動画の表示領域を広げる Chrome 拡張 (Manifest V3)。
 
-- 最終更新: 2026-10-04
+- 最終更新: 2026-10-04（v0.2.0）
 - 対象: `https://www.youtube.com/watch?v=*` のうちライブチャット / チャットリプレイがあるページ
 
 ---
@@ -56,10 +56,11 @@ iframe は youtube.com と同一オリジンなので、拡張から中に介入
 2. **状態の判定は `ytd-watch-flexy` の属性に任せる。** CSS は属性セレクタで直接書き、JS は「チャットが開いているか」だけを `<html>` に写す。
 3. **YouTube 依存部分を集約する。** セレクタ・属性名は `src/shared/selectors.ts`、上書き CSS は `static/content.css` に集約する。
 4. **レイアウトを変えたら `resize` イベントを発火する。** プレイヤーに動画サイズを再計算させる。
+5. **設定は 1 つだけ。** チャンネルや表示モード（通常 / シアター）ごとに設定を分けず、どこでも同じレイアウトになるようにする。
 
 ---
 
-## 3. 機能仕様（MVP = v0.1）
+## 3. 機能仕様
 
 ### 3.1 レイアウトプリセット
 
@@ -67,12 +68,27 @@ iframe は youtube.com と同一オリジンなので、拡張から中に介入
 |---|---|---|---|
 | `default` | 標準 | YouTube のまま | YouTube のまま |
 | `swap` | チャット左 | `#columns` の並びを逆にする | プレイヤーとチャットの左右を入れ替える |
+| `above-comments` | コメントの上 | 概要欄の下・コメント欄の上にチャットを置く | 同左。右端の固定チャットをやめ、プレイヤーを全幅にする |
+| `above-related` | 関連動画の上 | 関連動画の列の先頭にチャットを置く（高さを指定可） | 同左。右端の固定チャットをやめ、プレイヤーを全幅にする |
 | `overlay` | オーバーレイ | チャットを浮かべ、右カラムは関連動画のみ | チャットを動画の上に浮かべ、プレイヤーを全幅に戻す |
 
 - 「チャット非表示」はプリセットではなく、YouTube 標準の開閉ボタンを使う（iframe が空になり、負荷も止まるため）。ショートカットキーとポップアップから操作する。
-- チャットが閉じているときは、オーバーレイのスタイルを適用しない。
+- チャットが閉じているときは、オーバーレイや差し込み枠のスタイルを適用しない。
+- 全画面時は下段（概要欄・コメント・関連動画）が非表示になるため、「コメントの上」「関連動画の上」は YouTube 既定の横並び表示になる。
 
-### 3.2 オーバーレイ
+### 3.2 コメントの上 / 関連動画の上
+
+- JS が空の枠 `#ytcl-chat-slot` を目的の位置に差し込む。
+  - コメントの上: `ytd-watch-metadata`（タイトル・概要欄）を含むボックスの直後。ライブ配信でコメント欄が無い場合も概要欄の下に置く
+  - 関連動画の上: `#secondary-inner > #related` の直前
+- チャット本体の DOM は動かさず、**CSS Anchor Positioning**（`anchor-name` / `position-anchor` / `anchor()` / `anchor-size()`）で枠に重ねる。概要欄の展開などで枠の位置が変わっても CSS だけで追従する。そのため Chrome 125 以上が必要（`minimum_chrome_version`）。
+- `#secondary` は `position: relative` のため、そのままだと別カラムにある枠を anchor にできない。これらのプリセットでは `static` にする。
+- YouTube 既定の `min-height: 596px`（通常レイアウト時）を打ち消す。
+- 枠の幅は置いた列の幅に従い、高さは設定値（px）。
+- 枠を置けないとき（対象要素が無いなど）は `ytcl-slot-ready` を付けず、チャットを動かさない。
+- 枠の位置は、SPA 遷移・`ytd-watch-flexy` の属性変化・設定変更のたびに確認し直す。
+
+### 3.3 オーバーレイ
 
 - 位置とサイズはビューポートに対する **%（vw / vh）** で保存する。ウィンドウサイズや全画面の切り替えに追従する。
 - チャット上端の**移動バー**（高さ 14px）をドラッグして移動する。**ダブルクリックで初期位置に戻す**。
@@ -81,24 +97,25 @@ iframe は youtube.com と同一オリジンなので、拡張から中に介入
 - 保存はドラッグ終了時だけ行う（`storage.sync` の書き込み回数制限への対策）。
 - チャット iframe 内は、背景を半透明（不透明度は設定可）、文字を白＋縁取りにする。
 
-### 3.3 チャットの見た目（全プリセット共通）
+### 3.4 チャットの見た目（全プリセット共通）
 
 | 設定 | 内容 |
 |---|---|
-| チャット幅 | 横並び時の幅（px）。0 = YouTube 既定。`--ytd-watch-flexy-sidebar-width` を上書きする |
+| チャット幅 | 横並び時の幅（px）。0 = YouTube 既定。`--ytd-watch-flexy-sidebar-width` を上書きする（右カラム全体の幅になる） |
+| チャットの高さ | 「コメントの上」「関連動画の上」での高さ（px、200〜1200） |
 | 文字サイズ | 70〜200%。メッセージ一覧に `zoom` を掛ける |
 | ヘッダーを隠す | `yt-live-chat-header-renderer` |
 | 入力欄を隠す | `#input-panel` / `#panel-pages` |
 | ティッカーを隠す | `#ticker`（スーパーチャットの帯） |
 
-### 3.4 ショートカットキー（`chrome.commands`。`chrome://extensions/shortcuts` で変更可能）
+### 3.5 ショートカットキー（`chrome.commands`。`chrome://extensions/shortcuts` で変更可能）
 
 | 既定のキー | 動作 |
 |---|---|
 | Alt+Shift+L | プリセットを順に切り替える |
 | Alt+Shift+C | チャットの表示 / 非表示 |
 
-### 3.5 設定の保存
+### 3.6 設定の保存
 
 `chrome.storage.sync` のキー `settings` に 1 オブジェクトとして保存する（型は `src/shared/settings.ts` の `Settings`）。ポップアップ・視聴ページ・チャット iframe は `storage.onChanged` で同期する。
 
@@ -111,6 +128,7 @@ static/manifest.json
 ├─ content.js + content.css   … youtube.com 全体（live_chat 系を除く）。document_start
 │    src/content/main.ts      … 設定の反映、ytd-watch-flexy の監視、resize の発火
 │    src/content/overlay.ts   … 移動バー・リサイズグリップ
+│    src/content/slot.ts      … コメント/関連動画の上に置く差し込み枠
 ├─ chat.js + chat.css         … /live_chat, /live_chat_replay（all_frames）
 │    src/chat/main.ts         … iframe 内の見た目調整
 ├─ background.js              … ショートカットキーの処理
@@ -126,26 +144,21 @@ src/shared/
 - ビルド: esbuild で各エントリを IIFE に束ね、`static/` と一緒に `dist/` へ出力する。
 - SPA 遷移: `yt-navigate-finish` で `ytd-watch-flexy` を取り直し、MutationObserver（`attributeFilter` 指定）を付け直す。
 - `<html>` に付ける class:
-  - `ytcl-preset-swap` / `ytcl-preset-overlay`
+  - `ytcl-preset-<id>`（`default` 以外）
+  - `ytcl-slot-ready`
   - `ytcl-chat-width`
   - `ytcl-chat-open`
   - `ytcl-dragging`
-- CSS 変数: `--ytcl-chat-width`, `--ytcl-ov-x/y/w/h`（視聴ページ）、`--ytcl-bg-alpha`, `--ytcl-font-scale`（チャット iframe）
+- CSS 変数: `--ytcl-chat-width`, `--ytcl-chat-height`, `--ytcl-ov-x/y/w/h`（視聴ページ）、`--ytcl-bg-alpha`, `--ytcl-font-scale`（チャット iframe）
 
 ---
 
 ## 5. ロードマップ
 
-### v0.2
-- チャンネルごとの自動適用（チャンネルごとにプリセットを決める）
-- 通常 / シアター / 全画面ごとに別のプリセットを使う（例: 全画面のときだけオーバーレイ）
-- アーカイブのコメント欄の扱い（隠す、チャットと切り替える）
-
-### v0.3
-- レイアウトエディタ（オプションページ）。グリッド上でプレイヤー・チャット・概要欄・関連動画を配置する
-- オーバーレイの角への吸着（スナップ）と、プリセット位置の保存
+チャンネルごと・表示モードごとの設定は、方針 5 により行わない。
 
 ### 検討中
+- オーバーレイの角への吸着（スナップ）
 - `ytd-watch-grid` レイアウトへの対応
 - 通常動画向けのプリセット（関連動画を隠してプレイヤーを最大化）
 

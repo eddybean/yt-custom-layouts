@@ -2,6 +2,7 @@ import type { Message } from '../shared/messages';
 import {
   DEFAULT_OVERLAY,
   PRESETS,
+  SLOT_PRESETS,
   loadSettings,
   saveSettings,
   type PresetId,
@@ -14,6 +15,8 @@ const enabled = $<HTMLInputElement>('enabled');
 const presetList = $<HTMLDivElement>('presets');
 const chatWidth = $<HTMLInputElement>('chatWidth');
 const chatWidthValue = $<HTMLOutputElement>('chatWidthValue');
+const chatHeight = $<HTMLInputElement>('chatHeight');
+const chatHeightValue = $<HTMLOutputElement>('chatHeightValue');
 const bgAlpha = $<HTMLInputElement>('bgAlpha');
 const bgAlphaValue = $<HTMLOutputElement>('bgAlphaValue');
 const fontScale = $<HTMLInputElement>('fontScale');
@@ -23,6 +26,7 @@ const hideInput = $<HTMLInputElement>('hideInput');
 const hideTicker = $<HTMLInputElement>('hideTicker');
 
 const labelWidth = (px: number) => (px === 0 ? '既定' : `${px}px`);
+const labelPx = (px: number) => `${px}px`;
 const labelPercent = (v: number) => `${Math.round(v * 100)}%`;
 
 function renderPresets(current: PresetId) {
@@ -51,6 +55,9 @@ function render(s: Settings) {
   chatWidth.value = String(s.chatWidth);
   chatWidthValue.value = labelWidth(s.chatWidth);
   chatWidth.disabled = s.preset === 'overlay';
+  chatHeight.value = String(s.chatHeight);
+  chatHeightValue.value = labelPx(s.chatHeight);
+  chatHeight.disabled = !SLOT_PRESETS.includes(s.preset);
   bgAlpha.value = String(Math.round(s.overlayBgAlpha * 100));
   bgAlphaValue.value = labelPercent(s.overlayBgAlpha);
   fontScale.value = String(Math.round(s.chatFontScale * 100));
@@ -73,6 +80,7 @@ function bindRange(
 }
 
 bindRange(chatWidth, chatWidthValue, (v) => v, labelWidth, (v) => ({ chatWidth: v }));
+bindRange(chatHeight, chatHeightValue, (v) => v, labelPx, (v) => ({ chatHeight: v }));
 bindRange(bgAlpha, bgAlphaValue, (v) => v / 100, labelPercent, (v) => ({ overlayBgAlpha: v }));
 bindRange(fontScale, fontScaleValue, (v) => v / 100, labelPercent, (v) => ({ chatFontScale: v }));
 

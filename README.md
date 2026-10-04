@@ -4,7 +4,11 @@ YouTube の生配信・アーカイブで、ライブチャットの位置やサ
 
 - **標準** … YouTube のまま（チャット幅だけ変更可）
 - **チャット左** … チャットとプレイヤーの左右を入れ替え
+- **コメントの上** … 概要欄の下・コメント欄の上にチャットを置き、動画を広げる
+- **関連動画の上** … 関連動画の列の先頭にチャットを置き、動画を広げる
 - **オーバーレイ** … チャットを半透明にして動画の上に浮かべ、ドラッグで移動・リサイズ
+
+Chrome 125 以上が必要です（CSS Anchor Positioning を使用）。
 
 仕様と YouTube 側の調査結果は [docs/SPEC.md](docs/SPEC.md) を参照してください。
 
@@ -27,7 +31,7 @@ npm run typecheck
 
 | パス | 内容 |
 |---|---|
-| `src/content/` | 視聴ページ用。設定の反映、状態の監視、オーバーレイの操作 |
+| `src/content/` | 視聴ページ用。設定の反映、状態の監視、差し込み枠、オーバーレイの操作 |
 | `src/chat/` | チャット iframe 用。透過・文字サイズ・要素の非表示 |
 | `src/popup/` | ポップアップの設定 UI |
 | `src/background.ts` | ショートカットキーの処理 |
@@ -35,3 +39,7 @@ npm run typecheck
 | `static/` | manifest・CSS・HTML（ビルド時に `dist/` へコピー） |
 
 YouTube の仕様変更で効かなくなったときは、まず `src/shared/selectors.ts` と `static/content.css` を確認してください。
+
+## ライセンス
+
+[MIT](LICENSE)

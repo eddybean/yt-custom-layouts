@@ -4,6 +4,7 @@ import {
   DEFAULT_OVERLAY,
   DEFAULT_SETTINGS,
   PRESETS,
+  SLOT_PRESETS,
   loadSettings,
   onSettingsChanged,
   saveSettings,
@@ -11,12 +12,14 @@ import {
   type Settings,
 } from '../shared/settings';
 import { clampRect, createOverlayHandles } from './overlay';
+import { createChatSlot } from './slot';
 
 /*
  * レイアウトは static/content.css 側で実装し、ここでは <html> に
  *   - ytcl-preset-<id>   : 適用中のプリセット
  *   - ytcl-chat-width    : チャット幅を上書きするか
  *   - ytcl-chat-open     : チャットが開いているか（ytd-watch-flexy の属性から転記）
+ *   - ytcl-slot-ready    : 差し込み枠を置けたか（置けないときはチャットを動かさない）
  * の class と CSS 変数 (--ytcl-*) を付けるだけにする。
  */
 
@@ -24,8 +27,11 @@ const root = document.documentElement;
 let settings: Settings = DEFAULT_SETTINGS;
 let flexy: Element | null = null;
 
+const chatSlot = createChatSlot();
+
 const flexyObserver = new MutationObserver(() => {
   syncChatOpen();
+  placeSlot();
   scheduleRelayout();
 });
 
@@ -51,8 +57,16 @@ function applySettings(next: Settings) {
   }
   root.classList.toggle('ytcl-chat-width', on && next.preset !== 'overlay' && next.chatWidth > 0);
   root.style.setProperty('--ytcl-chat-width', `${next.chatWidth}px`);
+  root.style.setProperty('--ytcl-chat-height', `${next.chatHeight}px`);
   setOverlayVars(next.overlay);
+  placeSlot();
   scheduleRelayout();
+}
+
+function placeSlot() {
+  const wanted = settings.enabled && SLOT_PRESETS.includes(settings.preset);
+  root.classList.toggle('ytcl-slot-ready', wanted && chatSlot.place(settings.preset));
+  if (!wanted) chatSlot.place('default');
 }
 
 function syncChatOpen() {
@@ -68,6 +82,7 @@ function attachFlexy() {
     flexyObserver.observe(el, { attributes: true, attributeFilter: FLEXY_WATCHED_ATTRS });
   }
   syncChatOpen();
+  placeSlot();
   handles.mount();
   scheduleRelayout();
 }

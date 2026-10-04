@@ -12,6 +12,10 @@ export const SEL = {
   watchFlexy: 'ytd-watch-flexy',
   chatFrame: 'ytd-live-chat-frame#chat',
   chatToggleButton: 'ytd-live-chat-frame#chat #show-hide-button button',
+  /** 「コメントの上」: この要素を含むボックスの直後に枠を差し込む（コメント欄はその次のボックス） */
+  watchMetadata: 'ytd-watch-flexy #below ytd-watch-metadata',
+  /** 「関連動画の上」: この要素の直前に枠を差し込む */
+  related: 'ytd-watch-flexy #secondary-inner > #related',
 } as const;
 
 /** ytd-watch-flexy に付く状態属性 */

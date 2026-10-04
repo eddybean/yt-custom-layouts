@@ -1,6 +1,6 @@
 {
   "name": "yt-custom-layouts",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "YouTube の生配信ページでチャット位置やレイアウトを自由に変更する Chrome 拡張",
@@ -13,5 +13,6 @@
     "@types/chrome": "^0.3.4",
     "esbuild": "^0.28.2",
     "typescript": "^7.0.2"
-  }
+  },
+  "license": "MIT"
 }
