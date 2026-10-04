@@ -1,0 +1,72 @@
+{
+  "manifest_version": 3,
+  "name": "YT Custom Layouts",
+  "version": "0.1.0",
+  "description": "YouTube の生配信・アーカイブでチャットの位置やレイアウトを自由に変更します。",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "YT Custom Layouts",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "commands": {
+    "cycle-preset": {
+      "suggested_key": {
+        "default": "Alt+Shift+L"
+      },
+      "description": "レイアウトプリセットを切り替える"
+    },
+    "toggle-chat": {
+      "suggested_key": {
+        "default": "Alt+Shift+C"
+      },
+      "description": "チャットの表示/非表示を切り替える"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "exclude_matches": [
+        "https://www.youtube.com/live_chat*",
+        "https://www.youtube.com/live_chat_replay*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/live_chat*",
+        "https://www.youtube.com/live_chat_replay*"
+      ],
+      "js": [
+        "chat.js"
+      ],
+      "css": [
+        "chat.css"
+      ],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ]
+}

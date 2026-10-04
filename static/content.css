@@ -1,0 +1,117 @@
+/*
+ * 視聴ページ側のレイアウト上書き。すべて <html> の ytcl-* class 配下でのみ効く。
+ *
+ * YouTube の仕組み（2026-10 時点の調査結果）:
+ *  - チャット幅は ytd-watch-flexy の --ytd-watch-flexy-sidebar-width で決まる。
+ *    YouTube が resize のたびにインラインで書き戻すので !important で上書きする。
+ *  - シアター時は [fixed-panels][squeezeback] が付き、#chat が position:fixed で右端に固定される。
+ *  - 全画面時は [fullscreen][squeezeback] が付き、#chat は #panels-full-bleed-container 内へ移動する。
+ *    このコンテナには transform が掛かっており fixed の基準になってしまうので打ち消す。
+ */
+
+/* ---------- チャット幅（標準 / チャット左） ---------- */
+html.ytcl-chat-width ytd-watch-flexy {
+  --ytd-watch-flexy-sidebar-width: var(--ytcl-chat-width) !important;
+}
+
+/* ---------- チャット左 (swap) ---------- */
+/* 通常の2カラム */
+html.ytcl-preset-swap ytd-watch-flexy:not([fixed-panels]):not([squeezeback]) #columns {
+  flex-direction: row-reverse !important;
+}
+html.ytcl-preset-swap ytd-watch-flexy:not([fixed-panels]):not([squeezeback]) #secondary {
+  padding-right: 0 !important;
+  padding-left: var(--ytd-watch-flexy-horizontal-page-margin, 16px) !important;
+}
+/* シアター・全画面（プレイヤーとチャットパネルの並び） */
+html.ytcl-preset-swap ytd-watch-flexy[squeezeback] #full-bleed-container {
+  flex-direction: row-reverse !important;
+}
+html.ytcl-preset-swap ytd-watch-flexy[fixed-panels] #chat {
+  left: 0 !important;
+  right: auto !important;
+}
+html.ytcl-preset-swap ytd-watch-flexy[fixed-panels] #columns {
+  padding-right: 0 !important;
+  padding-left: var(--ytd-watch-flexy-sidebar-width) !important;
+}
+
+/* ---------- オーバーレイ ---------- */
+/* チャット分の領域を詰めてプレイヤーを広げる */
+html.ytcl-preset-overlay.ytcl-chat-open ytd-watch-flexy {
+  --ytd-watch-flexy-sidebar-width: 0px !important;
+}
+html.ytcl-preset-overlay ytd-watch-flexy[squeezeback] #panels-full-bleed-container {
+  transform: none !important;
+  animation: none !important;
+  width: 0 !important;
+}
+html.ytcl-preset-overlay ytd-watch-flexy[fixed-panels] #columns {
+  padding-right: 0 !important;
+}
+/* チャット本体をビューポート基準で浮かべる */
+html.ytcl-preset-overlay ytd-live-chat-frame#chat:not([collapsed]) {
+  position: fixed !important;
+  left: var(--ytcl-ov-x) !important;
+  top: var(--ytcl-ov-y) !important;
+  width: var(--ytcl-ov-w) !important;
+  height: var(--ytcl-ov-h) !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  z-index: 2100 !important;
+  border-radius: 8px;
+  background: transparent !important;
+  border: none !important;
+  /* シアター時の YouTube 既定 transition (top 0.3s) で移動バーとずれるのを防ぐ */
+  transition: none !important;
+}
+html.ytcl-preset-overlay ytd-live-chat-frame#chat:not([collapsed]) #show-hide-button {
+  display: none !important;
+}
+
+/* 移動バーとリサイズグリップ */
+#ytcl-overlay-frame {
+  display: none;
+}
+html.ytcl-preset-overlay.ytcl-chat-open #ytcl-overlay-frame {
+  display: block;
+  position: fixed;
+  left: var(--ytcl-ov-x);
+  top: var(--ytcl-ov-y);
+  width: var(--ytcl-ov-w);
+  height: var(--ytcl-ov-h);
+  z-index: 2101;
+  pointer-events: none;
+}
+.ytcl-overlay-bar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 14px;
+  cursor: move;
+  pointer-events: auto;
+  border-radius: 8px 8px 0 0;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.15s;
+}
+.ytcl-overlay-bar:hover,
+html.ytcl-dragging .ytcl-overlay-bar {
+  background: rgba(255, 255, 255, 0.35);
+}
+.ytcl-overlay-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  pointer-events: auto;
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.5) 50%);
+  border-radius: 0 0 8px 0;
+}
+html.ytcl-dragging ytd-live-chat-frame#chat {
+  pointer-events: none !important;
+}
+html.ytcl-dragging {
+  user-select: none;
+}

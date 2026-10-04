@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>YT Custom Layouts</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>YT Custom Layouts</h1>
+      <label class="switch"><input type="checkbox" id="enabled" /> 有効</label>
+    </header>
+
+    <section>
+      <h2>レイアウト</h2>
+      <div id="presets" class="presets"></div>
+    </section>
+
+    <section>
+      <h2>チャット</h2>
+      <label class="row">
+        <span>幅（横並び時）</span>
+        <input type="range" id="chatWidth" min="0" max="800" step="10" />
+        <output id="chatWidthValue"></output>
+      </label>
+      <label class="row">
+        <span>背景の濃さ（オーバーレイ）</span>
+        <input type="range" id="bgAlpha" min="0" max="100" step="5" />
+        <output id="bgAlphaValue"></output>
+      </label>
+      <label class="row">
+        <span>文字サイズ</span>
+        <input type="range" id="fontScale" min="70" max="200" step="5" />
+        <output id="fontScaleValue"></output>
+      </label>
+      <label class="check"><input type="checkbox" id="hideHeader" /> ヘッダーを隠す</label>
+      <label class="check"><input type="checkbox" id="hideInput" /> 入力欄を隠す</label>
+      <label class="check"><input type="checkbox" id="hideTicker" /> スパチャのティッカーを隠す</label>
+    </section>
+
+    <section class="actions">
+      <button id="toggleChat" type="button">チャット表示切替</button>
+      <button id="resetOverlay" type="button">オーバーレイ位置をリセット</button>
+    </section>
+
+    <footer>Alt+Shift+L: プリセット切替 / Alt+Shift+C: チャット表示切替</footer>
+    <script src="popup.js"></script>
+  </body>
+</html>
