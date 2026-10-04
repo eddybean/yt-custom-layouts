@@ -47,5 +47,4 @@ npm run shots      # ストア用スクリーンショットを store/screenshot
 
 ## Git・リリース
 
-- このドライブは所有者を記録しないため、git は `git -c safe.directory=E:/Work/src/yt-custom-layouts ...` で実行する。
 - リリースは `npm version patch|minor|major` → `git push --follow-tags`。`version` スクリプトが `static/manifest.json` のバージョンを同期し、タグの push で `.github/workflows/release.yml` が GitHub Release の作成と Chrome Web Store への公開申請を行う。
